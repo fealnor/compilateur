@@ -13,7 +13,6 @@ void E1(void)
 {
     if (uniteCourante == PLUS)
     {
-        printf("+");
         uniteCourante = yylex();
         E();
     }
@@ -30,7 +29,6 @@ void T1(void)
 {
     if (uniteCourante == FOIS)
     {
-        printf("*");
         uniteCourante = yylex();
         T();
     }
@@ -41,14 +39,10 @@ void F(void)
 {
     if (uniteCourante == PARENTHESE_OUVRANTE)
     {
-        printf("(");
         uniteCourante = yylex();
         E();
         if (uniteCourante == PARENTHESE_FERMANTE)
-        {
-            printf(")");
             return;
-        }
         else
         {
             printf("Erreur de syntaxe");
@@ -57,7 +51,6 @@ void F(void)
     }
     else if (uniteCourante == NOMBRE)
     {
-        printf("n");
         uniteCourante = yylex();
         return;
     }
