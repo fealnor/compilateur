@@ -19,3 +19,6 @@ int est_premier(int non_terminal, int terminal)
 {
   return premiers[terminal][non_terminal];
 }
+
+//regergrreqgr
+
