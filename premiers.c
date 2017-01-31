@@ -11,7 +11,8 @@ void initialise_premiers(void){
   
   // Exemple
   premiers[_programme_][ENTIER] = 1; 
-    
+
+   
   // TODO: Compléter le tableau premiers ici
 }
 
@@ -20,5 +21,5 @@ int est_premier(int non_terminal, int terminal)
   return premiers[terminal][non_terminal];
 }
 
-//regergrreqgr
+
 
