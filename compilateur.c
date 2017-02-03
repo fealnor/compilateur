@@ -14,8 +14,10 @@ int main(int argc, char **argv) {
         fprintf(stderr, "impossible d'ouvrir le fichier %s\n", "affect.l");
         exit(1);
     }
+    initialise_premiers();
+    initialise_suivants();
     uniteCourante = yylex();
-
+    printf("%d\n", uniteCourante);
     programme();
     uniteCourante = yylex();
     if (uniteCourante == FIN)

@@ -32,7 +32,11 @@
 		</Build>
 		<Compiler>
 			<Add option="-Wall" />
+			<Add option="-std=c99" />
 		</Compiler>
+		<Unit filename="compilateur.c">
+			<Option compilerVar="CC" />
+		</Unit>
 		<Unit filename="include/analyseur_lexical.h" />
 		<Unit filename="include/analyseur_syntaxique.h" />
 		<Unit filename="include/premiers.h" />
@@ -49,9 +53,6 @@
 			<Option compilerVar="CC" />
 		</Unit>
 		<Unit filename="src/suivants.c">
-			<Option compilerVar="CC" />
-		</Unit>
-		<Unit filename="src/test_yylex.c">
 			<Option compilerVar="CC" />
 		</Unit>
 		<Unit filename="src/util.c">

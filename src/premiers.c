@@ -9,13 +9,7 @@ void initialise_premiers(void){
     for(j=0; j <= NB_TERMINAUX; j++)
       premiers[i][j] = 0;
 
-  // Exemple
-  //premiers[_programme_][ENTIER] = 1;
-
-
-
-  // TODO: Compléter le tableau premiers ici
-  premiers[_expression_][OU] = 1;
+  //premiers[_expression_][OU] = 1;
   premiers[_expression_][NON] = 1;
   premiers[_expression_][PARENTHESE_OUVRANTE] = 1;
   premiers[_expression_][NOMBRE] = 1;
@@ -85,7 +79,7 @@ void initialise_premiers(void){
   premiers[_facteur_][ID_VAR] = 1;
   premiers[_facteur_][LIRE] = 1;
 
-  premiers[_var_][ID_FCT] = 1;
+  premiers[_var_][ID_VAR] = 1;
 
   premiers[_optIndice_][CROCHET_OUVRANT] = 1;
   premiers[_optIndice_][EPSILON] = 1;
@@ -174,5 +168,5 @@ void initialise_premiers(void){
 
 int est_premier(int non_terminal, int terminal)
 {
-  return premiers[terminal][non_terminal];
+    return premiers[non_terminal][terminal];
 }
