@@ -1,10 +1,11 @@
 # depslib dependency file v1.0
-1486149994 source:c:\users\loic\compilateur\compilateur.c
+1486992561 source:c:\users\loic\compilateur\compilateur.c
 	<stdio.h>
 	<stdlib.h>
 	"analyseur_lexical.h"
 	"symboles.h"
 	"analyseur_syntaxique.h"
+	"analyseur_xml.h"
 
 1486147227 c:\users\loic\compilateur\include\analyseur_lexical.h
 	"stdio.h"
@@ -13,7 +14,7 @@
 
 1486147227 c:\users\loic\compilateur\include\analyseur_syntaxique.h
 
-1486147227 source:c:\users\loic\compilateur\src\analyseur_lexical.c
+1486366576 source:c:\users\loic\compilateur\src\analyseur_lexical.c
 	<string.h>
 	<stdio.h>
 	<stdlib.h>
@@ -21,30 +22,48 @@
 	"analyseur_lexical.h"
 	"util.h"
 
-1486147227 c:\users\loic\compilateur\include\util.h
+1486368359 c:\users\loic\compilateur\include\util.h
 
-1486152058 source:c:\users\loic\compilateur\src\analyseur_syntaxique.c
+1486993930 source:c:\users\loic\compilateur\src\analyseur_syntaxique.c
 	"analyseur_syntaxique.h"
 	"symboles.h"
 	"analyseur_lexical.h"
-	<stdlib.h>
 
-1486150011 source:c:\users\loic\compilateur\src\premiers.c
+1486994309 source:c:\users\loic\compilateur\src\premiers.c
 	"symboles.h"
 	"premiers.h"
 
 1486147227 c:\users\loic\compilateur\include\premiers.h
 	"symboles.h"
 
-1486151394 source:c:\users\loic\compilateur\src\suivants.c
+1486993557 source:c:\users\loic\compilateur\src\suivants.c
 	"symboles.h"
 	"suivants.h"
 
 1486147227 c:\users\loic\compilateur\include\suivants.h
 	"symboles.h"
 
-1486147227 source:c:\users\loic\compilateur\src\util.c
+1486384109 source:c:\users\loic\compilateur\src\util.c
 	<stdio.h>
 	<stdlib.h>
 	<string.h>
+	"util.h"
+
+1486978257 source:c:\users\loic\compilateur\src\analyseur_xml.c
+	<stdio.h>
+	<stdlib.h>
+	<string.h>
+	"analyseur_xml.h"
+
+1486365384 c:\users\loic\compilateur\include\analyseur_xml.h
+
+1486979963 source:c:\users\loic\compilateur\compare_arbres_xml.c
+	<stdio.h>
+	<stdlib.h>
+	"analyseur_xml.h"
+
+1486979845 c:\users\loic\compilateur\compare_arbres_xml.c
+	<stdio.h>
+	<stdlib.h>
+	"analyseur_xml.h"
 
