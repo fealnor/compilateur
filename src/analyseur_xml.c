@@ -89,7 +89,7 @@ void libere_arbre(noeud *racine)
 
 /* analyseur lexical */
 
-int DEBUG = 1;
+int DEBUG = 0;
 char yytext[YYTEXT_MAX];
 int yyleng;
 int yylval;
