@@ -1,17 +1,11 @@
 #include "analyseur_syntaxique.h"
 #include "symboles.h"
 #include "analyseur_lexical.h"
-#include <stdlib.h>
 
 #define PRINT_SYNTAXE 1
 #define PRINT_LEXIQUE 1
 
 
-void exitProgramme(char* functionName)
-{
-    printf("Erreur de syntaxe %s", functionName);
-    exit(-1);
-}
 
 void affiche_lexique ()
 {
@@ -25,12 +19,13 @@ void affiche_lexique ()
 void programme(void)
 {
     affiche_balise_ouvrante(__FUNCTION__, PRINT_SYNTAXE);
-    if (est_premier(_optDecVariables_, uniteCourante))
+    if (est_premier(_optDecVariables_, uniteCourante) ||
+        est_suivant(uniteCourante, _optDecVariables_))
     {
         optDecVariables();
         listeDecFonctions();
     }
-    else exitProgramme(__FUNCTION__);
+    else erreur(__FUNCTION__);
     affiche_balise_fermante(__FUNCTION__, PRINT_SYNTAXE);
 }
 
@@ -48,9 +43,9 @@ void optDecVariables(void)
             uniteCourante = yylex();
         }
         else
-            exitProgramme(__FUNCTION__);
+            erreur("Manque un point virgule");
     }
-    else if (!est_suivant(uniteCourante, _optDecVariables_)) exitProgramme(__FUNCTION__);
+    else if (!est_suivant(uniteCourante, _optDecVariables_)) erreur(__FUNCTION__);
     affiche_balise_fermante(__FUNCTION__, PRINT_SYNTAXE);
 }
 
@@ -63,7 +58,7 @@ void listeDecVariables(void)
         declarationVariable();
         listeDecVariablesBis();
     }
-    else exitProgramme(__FUNCTION__);
+    else erreur(__FUNCTION__);
     affiche_balise_fermante(__FUNCTION__, PRINT_SYNTAXE);
 }
 
@@ -78,7 +73,7 @@ void listeDecVariablesBis(void)
         declarationVariable();
         listeDecVariablesBis();
     }
-    else if (!est_suivant(uniteCourante, _listeDecVariablesBis_)) exitProgramme(__FUNCTION__);
+    else if (!est_suivant(uniteCourante, _listeDecVariablesBis_)) erreur(__FUNCTION__);
     affiche_balise_fermante(__FUNCTION__, PRINT_SYNTAXE);
 }
 
@@ -96,9 +91,9 @@ void declarationVariable(void)
             uniteCourante = yylex();
             optTailleTableau();
         }
-        else exitProgramme(__FUNCTION__);
+        else erreur("Manque un nom de variable");
     }
-    else exitProgramme(__FUNCTION__);
+    else erreur(__FUNCTION__);
     affiche_balise_fermante(__FUNCTION__, PRINT_SYNTAXE);
 }
 
@@ -119,11 +114,11 @@ void optTailleTableau(void)
                 affiche_lexique();
                 uniteCourante = yylex();
             }
-            else exitProgramme(__FUNCTION__);
+            else erreur("Manque un crochet fermant");
         }
-        else exitProgramme(__FUNCTION__);
+        else erreur("Manque un nombre");
     }
-    else if (!est_suivant(uniteCourante, _optTailleTableau_)) exitProgramme(__FUNCTION__);
+    else if (!est_suivant(uniteCourante, _optTailleTableau_)) erreur(__FUNCTION__);
     affiche_balise_fermante(__FUNCTION__, PRINT_SYNTAXE);
 }
 
@@ -136,7 +131,7 @@ void listeDecFonctions(void)
         declarationFonction();
         listeDecFonctions();
     }
-    else if (!est_suivant(uniteCourante, _listeDecFonctions_)) exitProgramme(__FUNCTION__);
+    else if (!est_suivant(uniteCourante, _listeDecFonctions_)) erreur(__FUNCTION__);
     affiche_balise_fermante(__FUNCTION__, PRINT_SYNTAXE);
 }
 
@@ -152,7 +147,7 @@ void declarationFonction(void)
         optDecVariables();
         instructionBloc();
     }
-    else if (!est_suivant(uniteCourante, _declarationFonction_)) exitProgramme(__FUNCTION__);
+    else if (!est_suivant(uniteCourante, _declarationFonction_)) erreur(__FUNCTION__);
     affiche_balise_fermante(__FUNCTION__, PRINT_SYNTAXE);
 }
 
@@ -170,9 +165,9 @@ void listeParam(void)
             affiche_lexique();
             uniteCourante = yylex();
         }
-        else exitProgramme(__FUNCTION__);
+        else erreur("Manque une parenthese fermante");
     }
-    else exitProgramme(__FUNCTION__);
+    else erreur("Manque une parenthese ouvrante");
     affiche_balise_fermante(__FUNCTION__, PRINT_SYNTAXE);
 }
 
@@ -182,7 +177,7 @@ void optListeDecVariables(void)
     affiche_balise_ouvrante(__FUNCTION__, PRINT_SYNTAXE);
     if (est_premier(_listeDecVariables_, uniteCourante))
         listeDecVariables();
-    else if (!est_suivant(uniteCourante, _optListeDecVariables_)) exitProgramme(__FUNCTION__);
+    else if (!est_suivant(uniteCourante, _optListeDecVariables_)) erreur(__FUNCTION__);
     affiche_balise_fermante(__FUNCTION__, PRINT_SYNTAXE);
 }
 
@@ -213,7 +208,9 @@ void instruction(void)
         instructionEcriture();
     else if (est_premier(_instructionVide_, uniteCourante))
         instructionVide();
-    else exitProgramme(__FUNCTION__);
+    else if (est_premier(_instructionFaire_, uniteCourante))
+        instructionFaire();
+    else erreur(__FUNCTION__);
     affiche_balise_fermante(__FUNCTION__, PRINT_SYNTAXE);
 }
 
@@ -235,11 +232,11 @@ void instructionAffect(void)
                 uniteCourante = yylex();
             }
 
-            else exitProgramme(__FUNCTION__);
+            else erreur("Manque un point virgule");
         }
-        else exitProgramme(__FUNCTION__);
+        else erreur("Manque le signe egal");
     }
-    else exitProgramme(__FUNCTION__);
+    else erreur(__FUNCTION__);
     affiche_balise_fermante(__FUNCTION__, PRINT_SYNTAXE);
 }
 
@@ -257,9 +254,9 @@ void instructionBloc(void)
             affiche_lexique();
             uniteCourante = yylex();
         }
-        else exitProgramme(__FUNCTION__);
+        else erreur("Manque une accolade fermante");
     }
-    else exitProgramme(__FUNCTION__);
+    else erreur("Manque une accolade ouvrante");
     affiche_balise_fermante(__FUNCTION__, PRINT_SYNTAXE);
 }
 
@@ -272,7 +269,7 @@ void listeInstructions(void)
         instruction();
         listeInstructions();
     }
-    else if (!est_suivant(uniteCourante, _listeInstructions_)) exitProgramme(__FUNCTION__);
+    else if (!est_suivant(uniteCourante, _listeInstructions_)) erreur(__FUNCTION__);
     affiche_balise_fermante(__FUNCTION__, PRINT_SYNTAXE);
 }
 
@@ -288,9 +285,9 @@ void instructionAppel(void)
             affiche_lexique();
             uniteCourante = yylex();
         }
-        else exitProgramme(__FUNCTION__);
+        else erreur("Manque un point virgule");
     }
-    else exitProgramme(__FUNCTION__);
+    else erreur(__FUNCTION__);
     affiche_balise_fermante(__FUNCTION__, PRINT_SYNTAXE);
 }
 
@@ -310,9 +307,9 @@ void instructionSi(void)
             instructionBloc();
             optSinon();
         }
-        else exitProgramme(__FUNCTION__);
+        else erreur("Manque le mot cle : alors");
     }
-    else exitProgramme(__FUNCTION__);
+    else erreur("Manque le mot cle : si");
     affiche_balise_fermante(__FUNCTION__, PRINT_SYNTAXE);
 }
 
@@ -326,7 +323,7 @@ void optSinon(void)
         uniteCourante = yylex();
         instructionBloc();
     }
-    else if (!est_suivant(uniteCourante, _optSinon_)) exitProgramme(__FUNCTION__);
+    else if (!est_suivant(uniteCourante, _optSinon_)) erreur(__FUNCTION__);
     affiche_balise_fermante(__FUNCTION__, PRINT_SYNTAXE);
 }
 
@@ -345,9 +342,9 @@ void instructionTantque(void)
             uniteCourante = yylex();
             instructionBloc();
         }
-        else exitProgramme(__FUNCTION__);
+        else erreur("Manque le mot cle : faire");
     }
-    else exitProgramme(__FUNCTION__);
+    else erreur("Manque le mot cle tantque");
     affiche_balise_fermante(__FUNCTION__, PRINT_SYNTAXE);
 }
 
@@ -365,9 +362,9 @@ void instructionRetour(void)
             affiche_lexique();
             uniteCourante = yylex();
         }
-        else exitProgramme(__FUNCTION__);
+        else erreur("Manque un point virgule");
     }
-    else exitProgramme(__FUNCTION__);
+    else erreur("Manque le mot cle : retour");
     affiche_balise_fermante(__FUNCTION__, PRINT_SYNTAXE);
 }
 
@@ -393,13 +390,13 @@ void instructionEcriture(void)
                     affiche_lexique();
                     uniteCourante = yylex();
                 }
-                else exitProgramme(__FUNCTION__);
+                else erreur("Manque un point virgule");
             }
-            else exitProgramme(__FUNCTION__);
+            else erreur("Manque une parenthese fermante");
         }
-        else exitProgramme(__FUNCTION__);
+        else erreur("Manque une parenthese ouvrante");
     }
-    else exitProgramme(__FUNCTION__);
+    else erreur("Manque le mot cle ecrire");
     affiche_balise_fermante(__FUNCTION__, PRINT_SYNTAXE);
 }
 
@@ -412,7 +409,7 @@ void instructionVide(void)
         affiche_lexique();
         uniteCourante = yylex();
     }
-    else exitProgramme(__FUNCTION__);
+    else erreur("Manque un point virgule");
     affiche_balise_fermante(__FUNCTION__, PRINT_SYNTAXE);
 }
 
@@ -425,7 +422,7 @@ void expression(void)
         conjonction();
         expressionBis();
     }
-    else exitProgramme(__FUNCTION__);
+    else erreur(__FUNCTION__);
     affiche_balise_fermante(__FUNCTION__, PRINT_SYNTAXE);
 }
 
@@ -440,7 +437,7 @@ void expressionBis(void)
         conjonction();
         expressionBis();
     }
-    else if (!est_suivant(uniteCourante, _expressionBis_)) exitProgramme(__FUNCTION__);
+    else if (!est_suivant(uniteCourante, _expressionBis_)) erreur(__FUNCTION__);
     affiche_balise_fermante(__FUNCTION__, PRINT_SYNTAXE);
 }
 
@@ -453,7 +450,7 @@ void conjonction(void)
         comparaison();
         conjonctionBis();
     }
-    else exitProgramme(__FUNCTION__);
+    else erreur(__FUNCTION__);
     affiche_balise_fermante(__FUNCTION__, PRINT_SYNTAXE);
 }
 
@@ -468,7 +465,7 @@ void conjonctionBis(void)
         comparaison();
         conjonctionBis();
     }
-    else if (!est_suivant(uniteCourante, _conjonctionBis_)) exitProgramme(__FUNCTION__);
+    else if (!est_suivant(uniteCourante, _conjonctionBis_)) erreur(__FUNCTION__);
     affiche_balise_fermante(__FUNCTION__, PRINT_SYNTAXE);
 }
 
@@ -481,7 +478,7 @@ void comparaison(void)
         expArith();
         comparaisonBis();
     }
-    else exitProgramme(__FUNCTION__);
+    else erreur(__FUNCTION__);
     affiche_balise_fermante(__FUNCTION__, PRINT_SYNTAXE);
 }
 
@@ -499,7 +496,7 @@ void comparaisonBis(void)
         expArith();
         comparaisonBis();
     }
-    else if (!est_suivant(uniteCourante, _comparaisonBis_)) exitProgramme(__FUNCTION__);
+    else if (!est_suivant(uniteCourante, _comparaisonBis_)) erreur(__FUNCTION__);
     affiche_balise_fermante(__FUNCTION__, PRINT_SYNTAXE);
 }
 
@@ -512,7 +509,7 @@ void expArith(void)
         terme();
         expArithBis();
     }
-    else exitProgramme(__FUNCTION__);
+    else erreur(__FUNCTION__);
     affiche_balise_fermante(__FUNCTION__, PRINT_SYNTAXE);
 }
 
@@ -530,7 +527,7 @@ void expArithBis(void)
         terme();
         expArithBis();
     }
-    else if (!est_suivant(uniteCourante, _expArithBis_)) exitProgramme(__FUNCTION__);
+    else if (!est_suivant(uniteCourante, _expArithBis_)) erreur(__FUNCTION__);
     affiche_balise_fermante(__FUNCTION__, PRINT_SYNTAXE);
 }
 
@@ -543,7 +540,7 @@ void terme(void)
         negation();
         termeBis();
     }
-    else exitProgramme(__FUNCTION__);
+    else erreur(__FUNCTION__);
     affiche_balise_fermante(__FUNCTION__, PRINT_SYNTAXE);
 }
 
@@ -561,7 +558,7 @@ void termeBis(void)
         negation();
         termeBis();
     }
-    else if (!est_suivant(uniteCourante, _termeBis_)) exitProgramme(__FUNCTION__);
+    else if (!est_suivant(uniteCourante, _termeBis_)) erreur(__FUNCTION__);
     affiche_balise_fermante(__FUNCTION__, PRINT_SYNTAXE);
 }
 
@@ -577,7 +574,7 @@ void negation(void)
     }
     else if (est_premier(_facteur_, uniteCourante))
         facteur();
-    else exitProgramme(__FUNCTION__);
+    else erreur(__FUNCTION__);
     affiche_balise_fermante(__FUNCTION__, PRINT_SYNTAXE);
 }
 
@@ -600,7 +597,7 @@ void facteur(void)
             affiche_lexique();
             uniteCourante = yylex();
         }
-        else exitProgramme(__FUNCTION__);
+        else erreur("Manque une parenthese fermante");
     }
     else if (uniteCourante == NOMBRE)
     {
@@ -626,11 +623,11 @@ void facteur(void)
                 uniteCourante = yylex();
             }
 
-            else exitProgramme(__FUNCTION__);
+            else erreur("Manque une parenthese fermante");
         }
-        else exitProgramme(__FUNCTION__);
+        else erreur("Manque une parenthese ouvrante");
     }
-    else exitProgramme(__FUNCTION__);
+    else erreur(__FUNCTION__);
     affiche_balise_fermante(__FUNCTION__, PRINT_SYNTAXE);
 }
 
@@ -644,7 +641,7 @@ void var(void)
         uniteCourante = yylex();
         optIndice();
     }
-    else exitProgramme(__FUNCTION__);
+    else erreur("Manque le nom d'une variable");
     affiche_balise_fermante(__FUNCTION__, PRINT_SYNTAXE);
 }
 
@@ -662,9 +659,9 @@ void optIndice(void)
             affiche_lexique();
             uniteCourante = yylex();
         }
-        else exitProgramme(__FUNCTION__);
+        else erreur("Manque un crochet fermant");
     }
-    else if (!est_suivant(uniteCourante, _optIndice_)) exitProgramme(__FUNCTION__);
+    else if (!est_suivant(uniteCourante, _optIndice_)) erreur(__FUNCTION__);
     affiche_balise_fermante(__FUNCTION__, PRINT_SYNTAXE);
 }
 
@@ -686,11 +683,11 @@ void appelFct(void)
                 affiche_lexique();
                 uniteCourante = yylex();
             }
-            else exitProgramme(__FUNCTION__);
+            else erreur("Manque une parenthse fermante");
         }
-        else exitProgramme(__FUNCTION__);
+        else erreur("Manque une parenthese ouvrante");
     }
-    else exitProgramme(__FUNCTION__);
+    else erreur("Manque le nom d'une fonction");
     affiche_balise_fermante(__FUNCTION__, PRINT_SYNTAXE);
 }
 
@@ -703,7 +700,7 @@ void listeExpressions(void)
         expression();
         listeExpressionsBis();
     }
-    else if (!est_suivant(uniteCourante, _comparaisonBis_)) exitProgramme(__FUNCTION__);
+    else if (!est_suivant(uniteCourante, _comparaisonBis_)) erreur(__FUNCTION__);
     affiche_balise_fermante(__FUNCTION__, PRINT_SYNTAXE);
 }
 
@@ -718,8 +715,32 @@ void listeExpressionsBis(void)
         expression();
         listeExpressionsBis();
     }
-    else if (!est_suivant(uniteCourante, _comparaisonBis_)) exitProgramme(__FUNCTION__);
+    else if (!est_suivant(uniteCourante, _comparaisonBis_)) erreur(__FUNCTION__);
     affiche_balise_fermante(__FUNCTION__, PRINT_SYNTAXE);
 }
 
-//afficheBaliseOuvrante(__FUNCTION__, tracePRINT_SYNTAXE)
+void instructionFaire(void)
+{
+    affiche_balise_ouvrante(__FUNCTION__, PRINT_SYNTAXE);
+    if (uniteCourante == FAIRE)
+    {
+        affiche_lexique();
+        uniteCourante = yylex();
+        instructionBloc();
+        if (uniteCourante == TANTQUE)
+        {
+            affiche_lexique();
+            uniteCourante = yylex();
+            expression();
+            if (uniteCourante == POINT_VIRGULE)
+            {
+                affiche_lexique();
+                uniteCourante = yylex();
+            }
+            else erreur("Manque un point virgule");
+        }
+        else erreur("Manque un tant que");
+    }
+    else erreur("Manque un faire");
+    affiche_balise_fermante(__FUNCTION__, PRINT_SYNTAXE);
+}

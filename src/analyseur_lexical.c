@@ -12,28 +12,6 @@
 #define is_alpha(c)(is_maj(c) || is_min(c) || (c) == '_' || (c) == '$')
 #define is_alphanum(c)(is_num((c)) || is_alpha((c)))
 
-/*";",
-    "+",
-    "-",
-    "*",
-    "/",
-    "(",
-    ")",
-    "[",
-    "]"
-    "{",
-    "}",
-    "=",
-    "<",
-    "&&",
-    "||",
-    "!",*/
-    //"$",
-    //
-    //
-    //
-    //",",
-
 extern FILE *yyin;
 
 char *tableMotsClefs[] = {
@@ -49,22 +27,6 @@ char *tableMotsClefs[] = {
 };
 
 int codeMotClefs[] = {
-    /*POINT_VIRGULE,
-    PLUS,
-    MOINS,
-    FOIS,
-    DIVISE,
-    PARENTHESE_OUVRANTE,
-    PARENTHESE_FERMANTE,
-    CROCHET_OUVRANT,
-    CROCHET_FERMANT,
-    ACCOLADE_OUVRANTE,
-    ACCOLADE_FERMANTE,
-    EGAL,
-    INFERIEUR,
-    ET,
-    OU,
-    NON,*/
     SI,
     ALORS,
     SINON,
@@ -74,12 +36,6 @@ int codeMotClefs[] = {
     RETOUR,
     ECRIRE,
     LIRE,
-
-    /*ID_VAR,
-    ID_FCT,
-    NOMBRE,
-    FIN,
-    VIRGULE,*/
 };
 
 char yytext[YYTEXT_MAX];

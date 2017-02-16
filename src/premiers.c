@@ -124,7 +124,6 @@ void initialise_premiers(void){
 
   premiers[_instructionBloc_][ACCOLADE_OUVRANTE] = 1;
 
-
   premiers[_instructionAffect_][ID_VAR] = 1;
 
   premiers[_instruction_][ID_VAR] = 1;
@@ -135,6 +134,7 @@ void initialise_premiers(void){
   premiers[_instruction_][RETOUR] = 1;
   premiers[_instruction_][ECRIRE] = 1;
   premiers[_instruction_][POINT_VIRGULE] = 1;
+  premiers[_instruction_][FAIRE] = 1;
 
   premiers[_optListeDecVariables_][ENTIER] = 1;
   premiers[_optListeDecVariables_][EPSILON] = 1;
@@ -155,7 +155,8 @@ void initialise_premiers(void){
 
 
   premiers[_programme_][ENTIER] = 1;
-  premiers[_programme_][EPSILON] = 1;
+  premiers[_programme_][ID_FCT] = 1;
+  premiers[_programme_][FIN] = 1;
 
   premiers[_optDecVariables_][ENTIER] = 1;
   premiers[_optDecVariables_][EPSILON] = 1;
@@ -164,6 +165,8 @@ void initialise_premiers(void){
 
   premiers[_listeDecVariablesBis_][VIRGULE] = 1;
   premiers[_listeDecVariablesBis_][EPSILON] = 1;
+
+  premiers[_instructionFaire_][FAIRE] = 1;
 }
 
 int est_premier(int non_terminal, int terminal)
