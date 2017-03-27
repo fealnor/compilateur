@@ -2,10 +2,9 @@
 #include "symboles.h"
 #include "analyseur_lexical.h"
 
-#define PRINT_SYNTAXE 1
-#define PRINT_LEXIQUE 1
-
-
+#define PRINT_SYNTAXE 0
+#define PRINT_LEXIQUE 0
+#define PRINT_ABSTRAIT 0
 
 void affiche_lexique ()
 {
@@ -15,28 +14,41 @@ void affiche_lexique ()
     affiche_element(nom, valeur, PRINT_LEXIQUE);
 }
 
-//programme -> optDecVariables listeDecFonctions
-void programme(void)
+char* getValeur()
 {
+    char nom[100];
+    char valeur[100];
+    nom_token(uniteCourante, nom, valeur);
+    return valeur;
+}
+
+//programme -> optDecVariables listeDecFonctions
+n_prog* programme(void)
+{
+    n_prog* $$ = NULL;
+    n_l_dec* $1 = NULL;
+    n_l_dec* $2 = NULL;
     affiche_balise_ouvrante(__FUNCTION__, PRINT_SYNTAXE);
     if (est_premier(_optDecVariables_, uniteCourante) ||
         est_suivant(uniteCourante, _optDecVariables_))
     {
-        optDecVariables();
-        listeDecFonctions();
+        $1 = optDecVariables();
+        $2 = listeDecFonctions();
+        $$ = cree_n_prog($1, $2);
     }
     else erreur(__FUNCTION__);
     affiche_balise_fermante(__FUNCTION__, PRINT_SYNTAXE);
+    return $$;
 }
 
 //optDecVariables -> listeDecVariables ';' | EPSILON
-void optDecVariables(void)
+n_l_dec* optDecVariables(void)
 {
+    n_l_dec* $$ = NULL;
     affiche_balise_ouvrante(__FUNCTION__, PRINT_SYNTAXE);
     if (est_premier(_listeDecVariables_, uniteCourante))
     {
-        listeDecVariables();
-
+        $$ = listeDecVariables();
         if( uniteCourante == POINT_VIRGULE)
         {
             affiche_lexique();
@@ -47,40 +59,53 @@ void optDecVariables(void)
     }
     else if (!est_suivant(uniteCourante, _optDecVariables_)) erreur(__FUNCTION__);
     affiche_balise_fermante(__FUNCTION__, PRINT_SYNTAXE);
+    return $$;
 }
 
 //listeDecVariables -> declarationVariable listeDecVariablesBis
-void listeDecVariables(void)
+n_l_dec* listeDecVariables(void)
 {
+    n_l_dec* $$ = NULL;
+    n_dec* $1 = NULL;
+    n_l_dec* $2 = NULL;
     affiche_balise_ouvrante(__FUNCTION__, PRINT_SYNTAXE);
     if (est_premier(_declarationVariable_, uniteCourante))
     {
-        declarationVariable();
-        listeDecVariablesBis();
+        $1 = declarationVariable();
+        $2 = listeDecVariablesBis();
+        $$ = cree_n_l_dec($1, $2);
     }
     else erreur(__FUNCTION__);
     affiche_balise_fermante(__FUNCTION__, PRINT_SYNTAXE);
+    return $$;
 }
 
 //listeDecVariablesBis -> ',' declarationVariable listeDecVariablesBis | EPSILON
-void listeDecVariablesBis(void)
+n_l_dec* listeDecVariablesBis(void)
 {
+    n_l_dec* $$ = NULL;
+    n_dec* $2 = NULL;
+    n_l_dec* $3 = NULL;
     affiche_balise_ouvrante(__FUNCTION__, PRINT_SYNTAXE);
     if (uniteCourante == VIRGULE)
     {
         affiche_lexique();
         uniteCourante = yylex();
-        declarationVariable();
-        listeDecVariablesBis();
+        $2 = declarationVariable();
+        $3 = listeDecVariablesBis();
+        $$ = cree_n_l_dec($2, $3);
     }
     else if (!est_suivant(uniteCourante, _listeDecVariablesBis_)) erreur(__FUNCTION__);
     affiche_balise_fermante(__FUNCTION__, PRINT_SYNTAXE);
+    return $$;
 }
 
 //declarationVariable -> ENTIER ID_VAR optTailleTableau
-void declarationVariable(void)
+n_dec* declarationVariable(void)
 {
+    n_dec* $$ = NULL;
     affiche_balise_ouvrante(__FUNCTION__, PRINT_SYNTAXE);
+    int taille = -1;
     if (uniteCourante == ENTIER)
     {
         affiche_lexique();
@@ -88,18 +113,26 @@ void declarationVariable(void)
         if (uniteCourante == ID_VAR)
         {
             affiche_lexique();
+            char *v = malloc(100);
+            strcpy(v, getValeur());
             uniteCourante = yylex();
-            optTailleTableau();
+            taille = optTailleTableau();
+            if (taille < 0)
+                $$ = cree_n_dec_var(v);
+            else
+                $$ = cree_n_dec_tab(v, taille);
         }
         else erreur("Manque un nom de variable");
     }
     else erreur(__FUNCTION__);
     affiche_balise_fermante(__FUNCTION__, PRINT_SYNTAXE);
+    return $$;
 }
 
 //optTailleTableau -> '[' NOMBRE ']' | EPSILON
-void optTailleTableau(void)
+int optTailleTableau(void)
 {
+    int taille = -1;
     affiche_balise_ouvrante(__FUNCTION__, PRINT_SYNTAXE);
     if (uniteCourante == CROCHET_OUVRANT)
     {
@@ -108,6 +141,9 @@ void optTailleTableau(void)
         if (uniteCourante == NOMBRE)
         {
             affiche_lexique();
+            char *v = malloc(100);
+            strcpy(v, getValeur());
+            taille = atoi(v);
             uniteCourante = yylex();
             if (uniteCourante == CROCHET_FERMANT)
             {
@@ -120,46 +156,61 @@ void optTailleTableau(void)
     }
     else if (!est_suivant(uniteCourante, _optTailleTableau_)) erreur(__FUNCTION__);
     affiche_balise_fermante(__FUNCTION__, PRINT_SYNTAXE);
+    return taille;
 }
 
 //listeDecFonctions -> declarationFonction listeDecFonctions | EPSILON
-void listeDecFonctions(void)
+n_l_dec* listeDecFonctions(void)
 {
+    n_l_dec* $$ = NULL;
+    n_dec* $1 = NULL;
+    n_l_dec* $2 = NULL;
     affiche_balise_ouvrante(__FUNCTION__, PRINT_SYNTAXE);
     if (est_premier(_declarationFonction_, uniteCourante))
     {
-        declarationFonction();
-        listeDecFonctions();
+        $1 = declarationFonction();
+        $2 = listeDecFonctions();
+        $$ = cree_n_l_dec($1, $2);
     }
     else if (!est_suivant(uniteCourante, _listeDecFonctions_)) erreur(__FUNCTION__);
     affiche_balise_fermante(__FUNCTION__, PRINT_SYNTAXE);
+    return $$;
 }
 
 //declarationFonction -> ID_FCT listeParam optDecVariables instructionBloc
-void declarationFonction(void)
+n_dec* declarationFonction(void)
 {
+    n_dec* $$ = NULL;
+    n_l_dec* $2 = NULL;
+    n_l_dec* $3 = NULL;
+    n_instr* $4 = NULL;
     affiche_balise_ouvrante(__FUNCTION__, PRINT_SYNTAXE);
     if (uniteCourante == ID_FCT)
     {
         affiche_lexique();
+        char *v = malloc(100);
+        strcpy(v, getValeur());
         uniteCourante = yylex();
-        listeParam();
-        optDecVariables();
-        instructionBloc();
+        $2 = listeParam();
+        $3 = optDecVariables();
+        $4 = instructionBloc();
+        $$ = cree_n_dec_fonc(v, $2, $3, $4);
     }
     else if (!est_suivant(uniteCourante, _declarationFonction_)) erreur(__FUNCTION__);
     affiche_balise_fermante(__FUNCTION__, PRINT_SYNTAXE);
+    return $$;
 }
 
 //listeParam -> '(' optListeDecVariables ')'
-void listeParam(void)
+n_l_dec* listeParam(void)
 {
+    n_l_dec* $$ = NULL;
     affiche_balise_ouvrante(__FUNCTION__, PRINT_SYNTAXE);
     if (uniteCourante == PARENTHESE_OUVRANTE)
     {
         affiche_lexique();
         uniteCourante = yylex();
-        optListeDecVariables();
+        $$ = optListeDecVariables();
         if (uniteCourante == PARENTHESE_FERMANTE)
         {
             affiche_lexique();
@@ -169,16 +220,19 @@ void listeParam(void)
     }
     else erreur("Manque une parenthese ouvrante");
     affiche_balise_fermante(__FUNCTION__, PRINT_SYNTAXE);
+    return $$;
 }
 
 //optListeDecVariables -> listeDecVariables | EPSILON
-void optListeDecVariables(void)
+n_l_dec* optListeDecVariables(void)
 {
+    n_l_dec* $$ = NULL;
     affiche_balise_ouvrante(__FUNCTION__, PRINT_SYNTAXE);
     if (est_premier(_listeDecVariables_, uniteCourante))
-        listeDecVariables();
+        $$ = listeDecVariables();
     else if (!est_suivant(uniteCourante, _optListeDecVariables_)) erreur(__FUNCTION__);
     affiche_balise_fermante(__FUNCTION__, PRINT_SYNTAXE);
+    return $$;
 }
 
 /*instruction -> instructionAffect
@@ -189,47 +243,53 @@ void optListeDecVariables(void)
              | instructionRetour
              | instructionEcriture
              | instructionVide*/
-void instruction(void)
+n_instr* instruction(void)
 {
+    n_instr* $$ = NULL;
     affiche_balise_ouvrante(__FUNCTION__, PRINT_SYNTAXE);
     if (est_premier(_instructionAffect_, uniteCourante))
-        instructionAffect();
+        $$ = instructionAffect();
     else if (est_premier(_instructionBloc_, uniteCourante))
-        instructionBloc();
+        $$ = instructionBloc();
     else if (est_premier(_instructionSi_, uniteCourante))
-        instructionSi();
+        $$ = instructionSi();
     else if (est_premier(_instructionTantque_, uniteCourante))
-        instructionTantque();
+        $$ = instructionTantque();
     else if (est_premier(_instructionAppel_, uniteCourante))
-        instructionAppel();
+        $$ = instructionAppel();
     else if (est_premier(_instructionRetour_, uniteCourante))
-        instructionRetour();
+        $$ = instructionRetour();
     else if (est_premier(_instructionEcriture_, uniteCourante))
-        instructionEcriture();
+        $$ = instructionEcriture();
     else if (est_premier(_instructionVide_, uniteCourante))
-        instructionVide();
+        $$ = instructionVide();
     else if (est_premier(_instructionFaire_, uniteCourante))
-        instructionFaire();
+        $$ = instructionFaire();
     else erreur(__FUNCTION__);
     affiche_balise_fermante(__FUNCTION__, PRINT_SYNTAXE);
+    return $$;
 }
 
 //instructionAffect -> var '=' expression ';'
-void instructionAffect(void)
+n_instr* instructionAffect(void)
 {
+    n_instr* $$ = NULL;
+    n_var* $1 = NULL;
+    n_exp* $3 = NULL;
     affiche_balise_ouvrante(__FUNCTION__, PRINT_SYNTAXE);
     if (est_premier(_var_, uniteCourante))
     {
-        var();
+        $1 = var();
         if (uniteCourante == EGAL)
         {
             affiche_lexique();
             uniteCourante = yylex();
-            expression();
+            $3 = expression();
             if (uniteCourante == POINT_VIRGULE)
             {
                 affiche_lexique();
                 uniteCourante = yylex();
+                $$ = cree_n_instr_affect($1, $3);
             }
 
             else erreur("Manque un point virgule");
@@ -238,139 +298,176 @@ void instructionAffect(void)
     }
     else erreur(__FUNCTION__);
     affiche_balise_fermante(__FUNCTION__, PRINT_SYNTAXE);
+    return $$;
 }
 
 //instructionBloc -> '{' listeInstructions '}'
-void instructionBloc(void)
+n_instr* instructionBloc(void)
 {
+    n_l_instr* $2 = NULL;
+    n_instr* $$ = NULL;
     affiche_balise_ouvrante(__FUNCTION__, PRINT_SYNTAXE);
     if (uniteCourante == ACCOLADE_OUVRANTE)
     {
         affiche_lexique();
         uniteCourante = yylex();
-        listeInstructions();
+        $2 = listeInstructions();
         if (uniteCourante == ACCOLADE_FERMANTE)
         {
             affiche_lexique();
             uniteCourante = yylex();
+            $$ = cree_n_instr_bloc($2);
         }
         else erreur("Manque une accolade fermante");
     }
     else erreur("Manque une accolade ouvrante");
     affiche_balise_fermante(__FUNCTION__, PRINT_SYNTAXE);
+    return $$;
 }
 
 //listeInstructions -> instruction listeInstructions | EPSILON
-void listeInstructions(void)
+n_l_instr* listeInstructions(void)
 {
+    n_l_instr* $$ = NULL;
+    n_instr* $1 = NULL;
+    n_l_instr* $2 = NULL;
+
     affiche_balise_ouvrante(__FUNCTION__, PRINT_SYNTAXE);
     if (est_premier(_instruction_, uniteCourante))
     {
-        instruction();
-        listeInstructions();
+        $1 = instruction();
+        $2 = listeInstructions();
+        $$ = cree_n_l_instr($1, $2);
     }
     else if (!est_suivant(uniteCourante, _listeInstructions_)) erreur(__FUNCTION__);
     affiche_balise_fermante(__FUNCTION__, PRINT_SYNTAXE);
+    return $$;
 }
 
 //instructionAppel -> appelFct ';'
-void instructionAppel(void)
+n_instr* instructionAppel(void)
 {
+    n_instr* $$ = NULL;
+    n_appel* $1 = NULL;
+
     affiche_balise_ouvrante(__FUNCTION__, PRINT_SYNTAXE);
     if (est_premier(_appelFct_, uniteCourante))
     {
-        appelFct();
+        $1 = appelFct();
         if (uniteCourante == POINT_VIRGULE)
         {
             affiche_lexique();
             uniteCourante = yylex();
+            $$ = cree_n_instr_appel($1);
         }
         else erreur("Manque un point virgule");
     }
     else erreur(__FUNCTION__);
     affiche_balise_fermante(__FUNCTION__, PRINT_SYNTAXE);
+    return $$;
 }
 
 //instructionSi -> SI expression ALORS instructionBloc optSinon
-void instructionSi(void)
+n_instr* instructionSi(void)
 {
+    n_instr* $$ = NULL;
+    n_exp* $2 = NULL;
+    n_instr* $4 = NULL;
+    n_instr* $5 = NULL;
+
     affiche_balise_ouvrante(__FUNCTION__, PRINT_SYNTAXE);
     if (uniteCourante == SI)
     {
         affiche_lexique();
         uniteCourante = yylex();
-        expression();
+        $2 = expression();
         if (uniteCourante == ALORS)
         {
             affiche_lexique();
             uniteCourante = yylex();
-            instructionBloc();
-            optSinon();
+            $4 = instructionBloc();
+            $5 = optSinon();
+            $$ = cree_n_instr_si($2, $4, $5);
         }
         else erreur("Manque le mot cle : alors");
     }
     else erreur("Manque le mot cle : si");
     affiche_balise_fermante(__FUNCTION__, PRINT_SYNTAXE);
+    return $$;
 }
 
 //optSinon -> SINON instructionBloc | EPSILON
-void optSinon(void)
+n_instr* optSinon(void)
 {
+    n_instr* $$ = NULL;
     affiche_balise_ouvrante(__FUNCTION__, PRINT_SYNTAXE);
     if (uniteCourante == SINON)
     {
         affiche_lexique();
         uniteCourante = yylex();
-        instructionBloc();
+        $$ = instructionBloc();
     }
     else if (!est_suivant(uniteCourante, _optSinon_)) erreur(__FUNCTION__);
     affiche_balise_fermante(__FUNCTION__, PRINT_SYNTAXE);
+    return $$;
 }
 
 //instructionTantque -> TANTQUE expression FAIRE instructionBloc
-void instructionTantque(void)
+n_instr* instructionTantque(void)
 {
+    n_instr* $$ = NULL;
+    n_exp* $2 = NULL;
+    n_instr* $4 = NULL;
     affiche_balise_ouvrante(__FUNCTION__, PRINT_SYNTAXE);
     if (uniteCourante == TANTQUE)
     {
         affiche_lexique();
         uniteCourante = yylex();
-        expression();
+        $2 = expression();
         if (uniteCourante == FAIRE)
         {
             affiche_lexique();
             uniteCourante = yylex();
-            instructionBloc();
+            $4 = instructionBloc();
+            $$ = cree_n_instr_tantque($2, $4);
         }
         else erreur("Manque le mot cle : faire");
     }
     else erreur("Manque le mot cle tantque");
     affiche_balise_fermante(__FUNCTION__, PRINT_SYNTAXE);
+    return $$;
 }
 
 //instructionRetour -> RETOUR expression ';'
-void instructionRetour(void)
+n_instr* instructionRetour(void)
 {
+    n_instr* $$ = NULL;
+    n_exp* $2 = NULL;
     affiche_balise_ouvrante(__FUNCTION__, PRINT_SYNTAXE);
     if (uniteCourante == RETOUR)
     {
         affiche_lexique();
         uniteCourante = yylex();
-        expression();
+        $2 = expression();
         if (uniteCourante == POINT_VIRGULE)
         {
             affiche_lexique();
             uniteCourante = yylex();
+            $$ = cree_n_instr_retour($2);
         }
         else erreur("Manque un point virgule");
     }
     else erreur("Manque le mot cle : retour");
     affiche_balise_fermante(__FUNCTION__, PRINT_SYNTAXE);
+    return $$;
 }
 
 //instructionEcriture -> ECRIRE '(' expression ')' ';'
-void instructionEcriture(void)
+n_instr* instructionEcriture(void)
 {
+    n_instr* $$ = NULL;
+    n_exp* $3 = NULL;
+
     affiche_balise_ouvrante(__FUNCTION__, PRINT_SYNTAXE);
     if (uniteCourante == ECRIRE)
     {
@@ -380,7 +477,7 @@ void instructionEcriture(void)
         {
             affiche_lexique();
             uniteCourante = yylex();
-            expression();
+            $3 = expression();
             if (uniteCourante == PARENTHESE_FERMANTE)
             {
                 affiche_lexique();
@@ -389,6 +486,7 @@ void instructionEcriture(void)
                 {
                     affiche_lexique();
                     uniteCourante = yylex();
+                    $$ = cree_n_instr_ecrire($3);
                 }
                 else erreur("Manque un point virgule");
             }
@@ -398,184 +496,267 @@ void instructionEcriture(void)
     }
     else erreur("Manque le mot cle ecrire");
     affiche_balise_fermante(__FUNCTION__, PRINT_SYNTAXE);
+    return $$;
 }
 
 //instructionVide -> ';'
-void instructionVide(void)
+n_instr* instructionVide(void)
 {
+    n_instr* $$ = NULL;
     affiche_balise_ouvrante(__FUNCTION__, PRINT_SYNTAXE);
     if (uniteCourante == POINT_VIRGULE)
     {
         affiche_lexique();
         uniteCourante = yylex();
+        $$ = cree_n_instr_vide();
     }
     else erreur("Manque un point virgule");
     affiche_balise_fermante(__FUNCTION__, PRINT_SYNTAXE);
+    return $$;
 }
 
 //expression -> conjonction expressionBis
-void expression(void)
+n_exp* expression(void)
 {
+    n_exp* $$ = NULL;
+    n_exp* $1 = NULL;
     affiche_balise_ouvrante(__FUNCTION__, PRINT_SYNTAXE);
     if (est_premier(_conjonction_, uniteCourante))
     {
-        conjonction();
-        expressionBis();
+        $1 = conjonction();
+        $$ = expressionBis($1);
     }
     else erreur(__FUNCTION__);
     affiche_balise_fermante(__FUNCTION__, PRINT_SYNTAXE);
+    return $$;
 }
 
 //expressionBis -> '|' conjonction expressionBis | EPSILON
-void expressionBis(void)
+n_exp* expressionBis(n_exp* herite)
 {
+    n_exp* $$ = NULL;
+    n_exp* $2 = NULL;
+    n_exp* herite_fils = NULL;
     affiche_balise_ouvrante(__FUNCTION__, PRINT_SYNTAXE);
     if (uniteCourante == OU)
     {
         affiche_lexique();
         uniteCourante = yylex();
-        conjonction();
-        expressionBis();
+        $2 = conjonction();
+        herite_fils = cree_n_exp_op(ou, herite, $2);
+        $$ = expressionBis(herite_fils);
     }
-    else if (!est_suivant(uniteCourante, _expressionBis_)) erreur(__FUNCTION__);
+    else if (est_suivant(uniteCourante, _expressionBis_))
+        $$ = herite;
+    else erreur(__FUNCTION__);
     affiche_balise_fermante(__FUNCTION__, PRINT_SYNTAXE);
+    return $$;
 }
 
 //conjonction -> comparaison conjonctionBis
-void conjonction(void)
+n_exp* conjonction(void)
 {
+    n_exp* $$ = NULL;
+    n_exp* $1 = NULL;
     affiche_balise_ouvrante(__FUNCTION__, PRINT_SYNTAXE);
     if (est_premier(_comparaison_, uniteCourante))
     {
-        comparaison();
-        conjonctionBis();
+        $1 = comparaison();
+        $$ = conjonctionBis($1);
     }
     else erreur(__FUNCTION__);
     affiche_balise_fermante(__FUNCTION__, PRINT_SYNTAXE);
+    return $$;
 }
 
 //conjonctionBis -> '&' comparaison conjonctionBis | EPSILON
-void conjonctionBis(void)
+n_exp* conjonctionBis(n_exp* herite)
 {
+    n_exp* $$ = NULL;
+    n_exp* $2 = NULL;
+    n_exp* herite_fils = NULL;
     affiche_balise_ouvrante(__FUNCTION__, PRINT_SYNTAXE);
     if (uniteCourante == ET)
     {
         affiche_lexique();
         uniteCourante = yylex();
-        comparaison();
-        conjonctionBis();
+        $2 = comparaison();
+        herite_fils = cree_n_exp_op(et, herite, $2);
+        $$ = conjonctionBis(herite_fils);
     }
-    else if (!est_suivant(uniteCourante, _conjonctionBis_)) erreur(__FUNCTION__);
+    else if (est_suivant(uniteCourante, _conjonctionBis_))
+        $$ = herite;
+    else erreur(__FUNCTION__);
     affiche_balise_fermante(__FUNCTION__, PRINT_SYNTAXE);
+    return $$;
 }
 
 //comparaison -> expArith comparaisonBis
-void comparaison(void)
+n_exp* comparaison(void)
 {
+    n_exp* $$ = NULL;
+    n_exp* $1 = NULL;
     affiche_balise_ouvrante(__FUNCTION__, PRINT_SYNTAXE);
     if (est_premier(_expArith_, uniteCourante))
     {
-        expArith();
-        comparaisonBis();
+        $1 = expArith();
+        $$ = comparaisonBis($1);
     }
     else erreur(__FUNCTION__);
     affiche_balise_fermante(__FUNCTION__, PRINT_SYNTAXE);
+    return $$;
 }
 
 /*comparaisonBis -> '=' expArith comparaisonBis
                 | '<' expArith comparaisonBis
                 | EPSILON
 */
-void comparaisonBis(void)
+n_exp* comparaisonBis(n_exp* herite)
 {
+    n_exp* $$ = NULL;
+    n_exp* $2 = NULL;
+    n_exp* herite_fils = NULL;
+
     affiche_balise_ouvrante(__FUNCTION__, PRINT_SYNTAXE);
-    if (uniteCourante == EGAL || uniteCourante == INFERIEUR)
+    if (uniteCourante == EGAL)
     {
         affiche_lexique();
         uniteCourante = yylex();
-        expArith();
-        comparaisonBis();
+        $2 = expArith();
+        herite_fils = cree_n_exp_op(egal, herite, $2);
+        $$ = comparaisonBis(herite_fils);
     }
-    else if (!est_suivant(uniteCourante, _comparaisonBis_)) erreur(__FUNCTION__);
+    else if (uniteCourante == INFERIEUR)
+    {
+        affiche_lexique();
+        uniteCourante = yylex();
+        $2 = expArith();
+        herite_fils = cree_n_exp_op(inf, herite, $2);
+        $$ = comparaisonBis(herite_fils);
+    }
+    else if (est_suivant(uniteCourante, _comparaisonBis_))
+        $$ = herite;
+    else erreur(__FUNCTION__);
     affiche_balise_fermante(__FUNCTION__, PRINT_SYNTAXE);
+    return $$;
 }
 
 //expArith -> terme expArithBis
-void expArith(void)
+n_exp* expArith(void)
 {
+    n_exp* $$ = NULL;
+    n_exp* $1 = NULL;
     affiche_balise_ouvrante(__FUNCTION__, PRINT_SYNTAXE);
     if (est_premier(_terme_, uniteCourante))
     {
-        terme();
-        expArithBis();
+        $1 = terme();
+        $$ = expArithBis($1);
     }
     else erreur(__FUNCTION__);
     affiche_balise_fermante(__FUNCTION__, PRINT_SYNTAXE);
+    return $$;
 }
 
 /*expArithBis -> '+' terme expArithBis
              | '-' terme expArithBis
              |
 */
-void expArithBis(void)
+n_exp* expArithBis(n_exp* herite)
 {
+    n_exp* $$ = NULL;
+    n_exp* $2 = NULL;
+    n_exp* herite_fils = NULL;
     affiche_balise_ouvrante(__FUNCTION__, PRINT_SYNTAXE);
-    if (uniteCourante == PLUS || uniteCourante == MOINS)
+    if (uniteCourante == PLUS)
     {
         affiche_lexique();
         uniteCourante = yylex();
-        terme();
-        expArithBis();
+        $2 = terme();
+        herite_fils = cree_n_exp_op(plus, herite, $2);
+        $$ = expArithBis(herite_fils);
     }
-    else if (!est_suivant(uniteCourante, _expArithBis_)) erreur(__FUNCTION__);
+    else if (uniteCourante == MOINS)
+    {
+        affiche_lexique();
+        uniteCourante = yylex();
+        $2 = terme();
+        herite_fils = cree_n_exp_op(moins, herite, $2);
+        $$ = expArithBis(herite_fils);
+    }
+    else if (est_suivant(uniteCourante, _expArithBis_))
+        $$ = herite;
+    else erreur(__FUNCTION__);
     affiche_balise_fermante(__FUNCTION__, PRINT_SYNTAXE);
+    return $$;
 }
 
 //terme -> negation termeBis
-void terme(void)
+n_exp* terme(void)
 {
+    n_exp* $$ = NULL;
+    n_exp* $1 = NULL;
     affiche_balise_ouvrante(__FUNCTION__, PRINT_SYNTAXE);
     if (est_premier(_negation_, uniteCourante))
     {
-        negation();
-        termeBis();
+        $1 = negation();
+        $$ = termeBis($1);
     }
     else erreur(__FUNCTION__);
     affiche_balise_fermante(__FUNCTION__, PRINT_SYNTAXE);
+    return $$;
 }
 
 /*termeBis -> '*' negation termeBis
           | '/' negation termeBis
           | EPSILON
 */
-void termeBis(void)
+n_exp* termeBis(n_exp *herite)
 {
+    n_exp* $2;
+    n_exp* $$;
+    n_exp* herite_fils;
+
     affiche_balise_ouvrante(__FUNCTION__, PRINT_SYNTAXE);
-    if (uniteCourante == FOIS || uniteCourante == DIVISE)
+    if (uniteCourante == FOIS)
     {
         affiche_lexique();
         uniteCourante = yylex();
-        negation();
-        termeBis();
+        $2 = negation();
+        herite_fils = cree_n_exp_op(fois, herite, $2);
+        $$ = termeBis(herite_fils);
     }
-    else if (!est_suivant(uniteCourante, _termeBis_)) erreur(__FUNCTION__);
+    else if (uniteCourante == DIVISE)
+    {
+        affiche_lexique();
+        uniteCourante = yylex();
+        $2 = negation();
+        herite_fils = cree_n_exp_op(divise, herite, $2);
+        $$ = termeBis(herite_fils);
+    }
+    else if (est_suivant(uniteCourante, _termeBis_))
+        $$ = herite;
+    else  erreur(__FUNCTION__);
     affiche_balise_fermante(__FUNCTION__, PRINT_SYNTAXE);
+    return $$;
 }
 
 //negation -> '!' negation | facteur
-void negation(void)
+n_exp* negation(void) ///TODO
 {
+    n_exp* $$ = NULL;
     affiche_balise_ouvrante(__FUNCTION__, PRINT_SYNTAXE);
     if (uniteCourante == NON)
     {
         affiche_lexique();
         uniteCourante = yylex();
-        negation();
+        $$ = negation();
+        $$ = cree_n_exp_op(non, $$, NULL);
     }
     else if (est_premier(_facteur_, uniteCourante))
-        facteur();
+        $$ = facteur();
     else erreur(__FUNCTION__);
     affiche_balise_fermante(__FUNCTION__, PRINT_SYNTAXE);
+    return $$;
 }
 
 /*facteur -> '(' expression ')'
@@ -584,14 +765,18 @@ void negation(void)
          | var
          | LIRE '(' ')'
 */
-void facteur(void)
+n_exp* facteur(void)
 {
+    n_exp* $$ = NULL;
+    n_appel* $1 = NULL;
+    n_var* $2 = NULL;
+
     affiche_balise_ouvrante(__FUNCTION__, PRINT_SYNTAXE);
     if (uniteCourante == PARENTHESE_OUVRANTE)
     {
         affiche_lexique();
         uniteCourante = yylex();
-        expression();
+        $$ = expression();
         if (uniteCourante == PARENTHESE_FERMANTE)
         {
             affiche_lexique();
@@ -601,14 +786,23 @@ void facteur(void)
     }
     else if (uniteCourante == NOMBRE)
     {
+        char* v = malloc(100);
+        strcpy(v, getValeur());
         affiche_lexique();
         uniteCourante = yylex();
+        $$ = cree_n_exp_entier( atoi(v));
     }
 
     else if (est_premier(_appelFct_, uniteCourante))
-        appelFct();
+    {
+        $1 = appelFct();
+        $$ = cree_n_exp_appel($1);
+    }
     else if (est_premier(_var_, uniteCourante))
-        var();
+    {
+        $2 = var();
+        $$ = cree_n_exp_var($2);
+    }
     else if (uniteCourante == LIRE)
     {
         affiche_lexique();
@@ -621,6 +815,7 @@ void facteur(void)
             {
                 affiche_lexique();
                 uniteCourante = yylex();
+                $$ = cree_n_exp_lire();
             }
 
             else erreur("Manque une parenthese fermante");
@@ -629,31 +824,43 @@ void facteur(void)
     }
     else erreur(__FUNCTION__);
     affiche_balise_fermante(__FUNCTION__, PRINT_SYNTAXE);
+    return $$;
 }
 
 //var -> ID_VAR optIndice
-void var(void)
+n_var* var(void)
 {
+    n_var* $$ = NULL;
+    n_exp* $2 = NULL;
     affiche_balise_ouvrante(__FUNCTION__, PRINT_SYNTAXE);
     if (uniteCourante == ID_VAR)
     {
         affiche_lexique();
+        char *v = malloc(100);
+        strcpy(v, getValeur());
         uniteCourante = yylex();
-        optIndice();
+        $2 = optIndice();
+
+        if ($2) ///TODO
+            $$ = cree_n_var_indicee(v, $2);
+        else
+            $$ = cree_n_var_simple(v);
     }
     else erreur("Manque le nom d'une variable");
     affiche_balise_fermante(__FUNCTION__, PRINT_SYNTAXE);
+    return $$;
 }
 
 //optIndice -> '[' expression ']' | EPSILON
-void optIndice(void)
+n_exp* optIndice(void)
 {
+    n_exp* $$ = NULL;
     affiche_balise_ouvrante(__FUNCTION__, PRINT_SYNTAXE);
     if (uniteCourante == CROCHET_OUVRANT)
     {
         affiche_lexique();
         uniteCourante = yylex();
-        expression();
+        $$ = expression();
         if (uniteCourante == CROCHET_FERMANT)
         {
             affiche_lexique();
@@ -663,25 +870,31 @@ void optIndice(void)
     }
     else if (!est_suivant(uniteCourante, _optIndice_)) erreur(__FUNCTION__);
     affiche_balise_fermante(__FUNCTION__, PRINT_SYNTAXE);
+    return $$;
 }
 
 //appelFct -> ID_FCT '(' listeExpressions ')'
-void appelFct(void)
+n_appel* appelFct(void)
 {
+    n_appel* $$ = NULL;
+    n_l_exp* $3 = NULL;
     affiche_balise_ouvrante(__FUNCTION__, PRINT_SYNTAXE);
     if (uniteCourante == ID_FCT)
     {
         affiche_lexique();
+        char *v = malloc(100);
+        strcpy(v, getValeur());
         uniteCourante = yylex();
         if (uniteCourante == PARENTHESE_OUVRANTE)
         {
             affiche_lexique();
             uniteCourante = yylex();
-            listeExpressions();
+            $3 = listeExpressions();
             if (uniteCourante == PARENTHESE_FERMANTE)
             {
                 affiche_lexique();
                 uniteCourante = yylex();
+                $$ =  cree_n_appel(v, $3);
             }
             else erreur("Manque une parenthse fermante");
         }
@@ -689,53 +902,70 @@ void appelFct(void)
     }
     else erreur("Manque le nom d'une fonction");
     affiche_balise_fermante(__FUNCTION__, PRINT_SYNTAXE);
+    return $$;
 }
 
 //listeExpressions -> expression listeExpressionsBis | EPSILON
-void listeExpressions(void)
+n_l_exp* listeExpressions(void)
 {
+    n_l_exp* $$ = NULL;
+    n_exp* $1 = NULL;
     affiche_balise_ouvrante(__FUNCTION__, PRINT_SYNTAXE);
     if (est_premier(_expression_, uniteCourante))
     {
-        expression();
-        listeExpressionsBis();
+        $1 = expression();
+        $$  = cree_n_l_exp($1, listeExpressionsBis($$)); ///TODO
     }
     else if (!est_suivant(uniteCourante, _comparaisonBis_)) erreur(__FUNCTION__);
     affiche_balise_fermante(__FUNCTION__, PRINT_SYNTAXE);
+    return $$;
 }
 
 //listeExpressionsBis -> ',' expression listeExpressionsBis | EPSILON
-void listeExpressionsBis(void)
+n_l_exp* listeExpressionsBis(n_l_exp* herite)
 {
+    n_l_exp* $$ = NULL;
+    n_exp* $2 = NULL;
+    n_l_exp* herite_fils = NULL;
+
     affiche_balise_ouvrante(__FUNCTION__, PRINT_SYNTAXE);
     if (uniteCourante == VIRGULE)
     {
         affiche_lexique();
         uniteCourante = yylex();
-        expression();
-        listeExpressionsBis();
+        $2 = expression();
+        herite_fils = cree_n_l_exp($2, herite);
+        $$ = listeExpressionsBis(herite_fils);
     }
-    else if (!est_suivant(uniteCourante, _comparaisonBis_)) erreur(__FUNCTION__);
+    else if (est_suivant(uniteCourante, _comparaisonBis_))
+        $$ = herite;
+    else erreur(__FUNCTION__);
     affiche_balise_fermante(__FUNCTION__, PRINT_SYNTAXE);
+    return $$;
 }
 
-void instructionFaire(void)
+
+n_instr* instructionFaire(void)
 {
+    n_instr* $$ = NULL;
+    n_instr* $2 = NULL;
+    n_exp* $4 = NULL;
     affiche_balise_ouvrante(__FUNCTION__, PRINT_SYNTAXE);
     if (uniteCourante == FAIRE)
     {
         affiche_lexique();
         uniteCourante = yylex();
-        instructionBloc();
+        $2 = instructionBloc();
         if (uniteCourante == TANTQUE)
         {
             affiche_lexique();
             uniteCourante = yylex();
-            expression();
+            $4 = expression();
             if (uniteCourante == POINT_VIRGULE)
             {
                 affiche_lexique();
                 uniteCourante = yylex();
+                $$ = cree_n_instr_faire($2, $4);
             }
             else erreur("Manque un point virgule");
         }
@@ -743,4 +973,5 @@ void instructionFaire(void)
     }
     else erreur("Manque un faire");
     affiche_balise_fermante(__FUNCTION__, PRINT_SYNTAXE);
+    return $$;
 }
