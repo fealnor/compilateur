@@ -1,0 +1,6 @@
+#ifndef ANALYSEUR_SEMANTIQUE_H_INCLUDED
+#define ANALYSEUR_SEMANTIQUE_H_INCLUDED
+
+void parcours_n_prog(n_prog *n);
+
+#endif // ANALYSEUR_SEMANTIQUE_H_INCLUDED
