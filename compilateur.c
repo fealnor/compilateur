@@ -101,7 +101,36 @@ int analyse_syntaxique(int argc, char **argv) {
     if (!initialise_file_xml(xml_file_name))
         return 1;
     uniteCourante = yylex();
-    programme();
+    affiche_n_prog(programme());
+
+}
+
+int analyse_abstrait(int argc, char **argv) {
+    if (argc != 3)
+    {
+        fprintf(stderr, "usage: %s fichier_l\n", argv[0]);
+        return 1;
+    }
+    yyin = fopen(argv[2], "r");
+    if(yyin == NULL)
+    {
+        fprintf(stderr, "impossible d'ouvrir le fichier %s\n", argv[2]);
+        return 1;
+    }
+
+    char xml_file_name[60];
+    int i;
+    for(i = 0; argv[2][i] != '.'; ++i)
+        xml_file_name[i] = argv[2][i];
+    xml_file_name[i] = '\0';
+    sprintf(xml_file_name, "%s2_xml", xml_file_name);
+
+    initialise_premiers();
+    initialise_suivants();
+    if (!initialise_file_xml(xml_file_name))
+        return 1;
+    uniteCourante = yylex();
+    parcours_n_prog(programme());
 
 }
 
@@ -112,5 +141,7 @@ int main(int argc, char **argv) {
         compare_syntaxe(argc, argv);
     if (!strcmp(argv[1], "l"))
         return analyse_lexicale(argc, argv);
+    if (!strcmp(argv[1], "a"))
+        return analyse_abstrait(argc, argv);
     return 1;
 }
